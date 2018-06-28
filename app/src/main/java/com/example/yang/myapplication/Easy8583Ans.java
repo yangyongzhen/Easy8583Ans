@@ -12,7 +12,7 @@ public class Easy8583Ans {
     //通信涉及到的一些参数,内部使用
     private static long commSn = 1; //通讯流水号
     private static byte[] piciNum = new byte[3];//批次号
-    private static byte[] licenceNum = new byte[4];//入网许可证编号
+    private static byte[] licenceNum = {0x33,0x30,0x36,0x30};//入网许可证编号
 
     //需要外部设置的参数有：商户号，终端号，主秘钥，TPDU(以下的为默认值，并提供set和get方法)
     private static String ManNum  = "808411341310014"; //商户号
@@ -131,6 +131,8 @@ public class Easy8583Ans {
 
         field[31].type = 1;//LLVAR
 
+        field[34].type = 1;//LLVAR
+
         field[36].type = 0;
         field[36].len = 12;
 
@@ -196,7 +198,7 @@ public class Easy8583Ans {
                     pk.TxBuffer[len] = (byte)field[i].len;
                     tmplen = Integer.parseInt(String.format("%02x",pk.TxBuffer[len]),10);
                     //域数据
-                    if((i==1)||(i==31)||(i==47)||(i==59)||(i==60))
+                    if((i==1)||(i==31)||(i==34)||(i==47)||(i==59)||(i==60))
                     {
                         tmplen = ((tmplen/2) + (tmplen%2));
                     }
@@ -208,7 +210,7 @@ public class Easy8583Ans {
                     pk.TxBuffer[len] = (byte)(field[i].len>>8);
                     pk.TxBuffer[len+1] = (byte)field[i].len;
                     tmplen = Integer.parseInt(String.format("%02x%02x",pk.TxBuffer[len],pk.TxBuffer[len+1]),10);
-                    if((i==1)||(i==31)||(i==47)||(i==59)||(i==60))
+                    if((i==1)||(i==31)||(i==34)||(i==47)||(i==59)||(i==60))
                     {
                         tmplen = ((tmplen/2) + (tmplen%2));
                     }
@@ -227,6 +229,7 @@ public class Easy8583Ans {
         arraycopy(pk.Head,0,pk.TxBuffer,7,6);
         arraycopy(pk.MsgType,0,pk.TxBuffer,13,2);
         arraycopy(pk.BitMap,0,pk.TxBuffer,15,8);
+        commSn++; //通讯流水每次加一
     }
 
     /**
