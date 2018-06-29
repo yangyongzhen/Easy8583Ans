@@ -38,13 +38,14 @@ public class MainActivity extends AppCompatActivity {
 
                 Easy8583Ans mypack = new Easy8583Ans();
                 mypack.frame8583QD(mypack.fieldsSend,mypack.pack);
-                Log.d("8583：",mypack.pack.toString());
-                Log.d("fields：",mypack.getFields(mypack.fieldsSend));
+                Log.d("8583:",mypack.pack.toString());
+                Log.d("fields send",mypack.getFields(mypack.fieldsSend));
 
                 String str ="0057600087000061310031110808000020000000C0001650001536313030303030313839383633303134313131313038350011000000000030002553657175656E6365204E6F31323330363036313030303030310003303031";
                 byte[] bt = Easy8583Ans.hexStringToBytes(str);
-                mypack.ans8583Fields(bt,bt.length,mypack.fieldsRecv);
-                Log.d("fields recv：",mypack.getFields(mypack.fieldsRecv));
+               // mypack.ans8583Fields(bt,bt.length,mypack.fieldsRecv);
+                mypack.ans8583QD(bt,bt.length);
+                Log.d("fields recv",mypack.getFields(mypack.fieldsRecv));
             }
         });
 
@@ -92,8 +93,8 @@ public class MainActivity extends AppCompatActivity {
         Retrofit retrofit = new Retrofit.Builder().client(client).baseUrl(url)
                 .addConverterFactory(MyConverterFactory.create()).build();
         ApiManager apiService = retrofit.create(ApiManager.class);
-
-        DataBean data = new DataBean();
+        String qdstr ="0057600087000061310031110808000020000000C0001650001536313030303030313839383633303134313131313038350011000000000030002553657175656E6365204E6F31323330363036313030303030310003303031";
+        DataBean data = new DataBean(qdstr);
         Call<LoginResult> call = apiService.postData(data.bodyhex);
         call.enqueue(new Callback<LoginResult>() {
             @Override
