@@ -7,6 +7,10 @@ import static com.example.yang.myapplication.DesUtil.DES_encrypt;
 import static com.example.yang.myapplication.DesUtil.DES_encrypt_3;
 import static java.lang.System.arraycopy;
 
+/**
+ * Created by yangyongzhen on 2018/06/30
+ * simple 8583 Protocol Analysis，业务处理
+ */
 public class My8583Ans extends Easy8583Ans {
 
     private static final String TAG= " My8583Ans";
@@ -17,12 +21,12 @@ public class My8583Ans extends Easy8583Ans {
     private static byte[] licenceNum = {0x33,0x30,0x36,0x30};//入网许可证编号
 
     //需要外部设置的参数有：商户号，终端号，主秘钥，TPDU(以下的为默认值，并提供set和get方法)
+    //需要持久化存储这些参数，每次使用时加载
     private static String manNum  = "001430170119999"; //商户号
     private static String posNum  = "99999906"; //终端号
     private static String mainKey = "258FB0Ab70D025CDB99DF2C4D302D646"; //主秘钥
     private static String TPDU    = "6005010000";
-    private static String macKey ; //工作秘钥
-
+    private static long   posSn = 1; //终端交易流水
     My8583Ans(){
 
         //通过子类修改父类的配置
@@ -35,6 +39,7 @@ public class My8583Ans extends Easy8583Ans {
      */
     public void frame8583QD( __8583Fields[] field, Pack tx){
 
+        init8583Fields(fieldsSend);
         //消息类型
         tx.msgType[0] = 0x08;
         tx.msgType[1] = 0x00;
@@ -155,7 +160,7 @@ public class My8583Ans extends Easy8583Ans {
         }
         else {
             System.out.println("<-ok MAC正确");
-            macKey = bytesToHexString(mackey);
+            setMacKey(bytesToHexString(mackey));
         }
         //签到成功
         return 0;
@@ -166,25 +171,38 @@ public class My8583Ans extends Easy8583Ans {
      * @param field
      * @param tx
      */
-    public void frame8583QrcodeUp( __8583Fields[] field, Pack tx){
+    public void frame8583Qrcode( String qrcode,int money,__8583Fields[] field, Pack tx){
 
+        if(qrcode.length()!= 19){
+            return;
+        }
+        init8583Fields(fieldsSend);
         //消息类型
         tx.msgType[0] = 0x02;
         tx.msgType[1] = 0x00;
         //3域 交易处理码
-
+        field[2].ishave = 1;
+        field[2].len = 3;
+        field[2].data = new byte[] {0x00,0x00,0x00};
         //4域 交易金额
+        field[3].ishave = 1;
+        field[3].len = 6;
+        String strtmp = String.format("%012d",money);
+        field[3].data = hexStringToBytes(strtmp);
 
-        //11域，受卡方系统跟踪号BCD 通讯流水
+        //11域，pos终端交易流水
         field[10].ishave = 1;
         field[10].len = 3;
-        String tmp = String.format("%06d",commSn);
+        String tmp = String.format("%06d",posSn);
         field[10].data = hexStringToBytes(tmp);
-
         //22域
-
+        field[21].ishave = 1;
+        field[21].len = 2;
+        field[21].data = new byte[] {0x03,0x20};
         // 25域
-
+        field[24].ishave = 1;
+        field[24].len = 1;
+        field[24].data = new byte[] {0x00};
         //
         //41域，终端号
         field[40].ishave = 1;
@@ -196,7 +214,20 @@ public class My8583Ans extends Easy8583Ans {
         field[41].data = manNum.getBytes();
 
         //49域 交易货币代码
+        field[48].ishave = 1;
+        field[48].len = 3;
+        field[48].data = new byte[]{0x31,0x35,0x36};
 
+        //59域，扫码的数据
+        field[58].ishave = 1;
+        field[58].len = 0x24;
+        field[58].data = new byte[24];
+        field[58].data[0] = 'A'; //TAG+Len(019)
+        field[58].data[1] = '3';
+        field[58].data[2] = '0';
+        field[58].data[3] = '1';
+        field[58].data[4] = '9';
+        arraycopy(qrcode.getBytes(),0,field[58].data,5,19);
 
         //60域
         field[59].ishave = 1;
@@ -207,33 +238,14 @@ public class My8583Ans extends Easy8583Ans {
         field[59].data[4] = 0x00;
         field[59].data[5] = 0x06;
         field[59].data[6] = 0x00;
-        //MAC
-        //UP_Get_MAC( &buf[13], len-13, UP_SysCfg.MACkek, &buf[len] );
+        //MAC，64域
+        field[63].ishave = 1;
+        field[63].len = 0x08;
+        field[63].data = new byte[8];
+        //这个域要求填MAC，只需按这样填，MAC的计算在pack8583Fields自动完成了
         /*报文组帧，自动组织这些域到Pack的TxBuffer中*/
         pack8583Fields(field,tx);
     }
-
-    public static void main(String[] args) {
-        My8583Ans mypack = new My8583Ans();
-        //签到组包
-        mypack.frame8583QD(mypack.fieldsSend,mypack.pack);
-        System.out.println(mypack.pack.toString());
-        System.out.println(mypack.getFields(mypack.fieldsSend));
-        //打印出待发送的报文
-        byte[] send = new byte[mypack.pack.txLen];
-        arraycopy(mypack.pack.txBuffer,0,send,0,mypack.pack.txLen);
-        System.out.println(My8583Ans.bytesToHexString(send));
-
-        //接收解析,假如收到的报文在recv中
-        String recvstr ="007960000001386131003111080810003800010AC0001450021122130107200800085500323231333031343931333239303039393939393930363030313433303137303131393939390011000005190030004046F161A743497B32EAC760DF5EA57DF5900ECCE3977731A7EA402DDF0000000000000000CFF1592A";
-        byte[] recv =My8583Ans.hexStringToBytes(recvstr);
-        // mypack.ans8583Fields(bt,bt.length,mypack.fieldsRecv);
-        //解析
-        mypack.ans8583QD(recv,recv.length);
-        //打印出解析成功的各个域
-        System.out.println(mypack.getFields(mypack.fieldsRecv));
-    }
-
 
     public static void setManNum(String manNum) {
         My8583Ans.manNum = manNum;
@@ -251,7 +263,59 @@ public class My8583Ans extends Easy8583Ans {
         My8583Ans.TPDU = TPDU;
     }
 
-    public static void setMacKey(String macKey) {
-        My8583Ans.macKey = macKey;
+    public static String getManNum() {
+        return manNum;
+    }
+
+    public static String getPosNum() {
+        return posNum;
+    }
+
+    public static String getMainKey() {
+        return mainKey;
+    }
+
+    public static String getTPDU() {
+        return TPDU;
+    }
+
+    public static void main(String[] args) {
+        My8583Ans myans = new My8583Ans();
+        //签到组包
+        myans.frame8583QD(myans.fieldsSend,myans.pack);
+        //打印出待发送的报文
+        byte[] send = new byte[myans.pack.txLen];
+        arraycopy(myans.pack.txBuffer,0,send,0,myans.pack.txLen);
+        System.out.println("->send:");
+        System.out.println(My8583Ans.bytesToHexString(send));
+        System.out.println(myans.pack.toString());
+        System.out.println(myans.getFields(myans.fieldsSend));
+        //接收解析,假如收到的报文在recv中
+        String recvstr ="007960000001386131003111080810003800010AC0001450021122130107200800085500323231333031343931333239303039393939393930363030313433303137303131393939390011000005190030004046F161A743497B32EAC760DF5EA57DF5900ECCE3977731A7EA402DDF0000000000000000CFF1592A";
+        System.out.println("->recv:"+recvstr);
+        byte[] recv = My8583Ans.hexStringToBytes(recvstr);
+        // mypack.ans8583Fields(bt,bt.length,mypack.fieldsRecv);
+        //解析
+        System.out.println("开始解析...");
+        int ret = myans.ans8583QD(recv,recv.length);
+        if(ret == 0){
+            //打印出解析成功的各个域
+            System.out.println("签到成功!");
+            System.out.println(myans.getFields(myans.fieldsRecv));
+        }
+
+        //二维码组包
+        System.out.println("->二维码交易 demo");
+        String qrcode = "6223360612494957384";
+        int money = 1; //1分
+        myans.frame8583Qrcode(qrcode,money,myans.fieldsSend,myans.pack);
+        //打印出待发送的报文
+        send = new byte[myans.pack.txLen];
+        arraycopy(myans.pack.txBuffer,0,send,0,myans.pack.txLen);
+        System.out.println("->send:");
+        System.out.println(My8583Ans.bytesToHexString(send));
+        System.out.println(myans.pack.toString());
+        System.out.println(myans.getFields(myans.fieldsSend));
+
     }
 }

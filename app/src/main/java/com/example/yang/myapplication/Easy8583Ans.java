@@ -10,6 +10,14 @@ import static java.lang.System.arraycopy;
 public class Easy8583Ans {
 
     private static final String TAG= " Easy8583Ans";
+    private static String macKey ; //工作秘钥
+
+    public static void setMacKey(String macKey) {
+        Easy8583Ans.macKey = macKey;
+    }
+    public static String getMacKey() {
+        return macKey;
+    }
     /**
      * 定义8583的报文协议包结构 Len+Tpdu+Head+MsgType+BitMap+Data
      */
@@ -73,6 +81,8 @@ public class Easy8583Ans {
         fieldsSend = new __8583Fields[64];
         fieldsRecv = new __8583Fields[64];
         pack = new Pack();
+        init8583(fieldsSend);
+        init8583(fieldsRecv);
         init8583Fields(fieldsSend);
         init8583Fields(fieldsRecv);
     }
@@ -81,11 +91,16 @@ public class Easy8583Ans {
      * 各个域的配置，初始化
      * @param field
      */
-    private void init8583Fields(__8583Fields[] field) {
-
+    private void init8583(__8583Fields[] field){
         for(int i = 0; i < 64; i++)
         {
             field[i] = new __8583Fields();
+        }
+    }
+    public void init8583Fields(__8583Fields[] field) {
+
+        for(int i = 0;i <64; i++){
+            field[i].ishave = 0;
         }
         field[0].type = 0;
         field[1].type = 1;//LLVAR
@@ -160,6 +175,7 @@ public class Easy8583Ans {
         field[63].type = 0;
         field[63].len = 8;
 
+        Arrays.fill(pack.txBuffer,(byte)0);
     }
     /**
      * 该方法不需要外部调用，该方法自动完成各个域的组包和BitMap的形成及报文长度的计算
@@ -183,6 +199,7 @@ public class Easy8583Ans {
                 pk.bitMap[j-1] |= seat;//根据每个filed中的ishave是否为1，自动计算BitMap
                 if(field[i].type == 0){
                     //根据每个域的数据类型，自动截取长度组包
+                    //System.out.println("i = "+i);
                     arraycopy(field[i].data,0,pk.txBuffer,len,field[i].len);//数据
                     len += field[i].len;
                 }
@@ -223,7 +240,12 @@ public class Easy8583Ans {
         arraycopy(pk.msgType,0,pk.txBuffer,13,2);
         arraycopy(pk.bitMap,0,pk.txBuffer,15,8);
 
-        //自动算MAC，填MAC
+        //如果64域存在，自动计算MAC并填充
+        if(field[63].ishave == 1){
+            byte[] mac = upGetMac(pk.txBuffer,13,len-13-8,hexStringToBytes(macKey));
+            arraycopy(mac,0,pk.txBuffer,len-8,8);
+            arraycopy(mac,0,field[63].data,0,8);
+        }
     }
 
     /**
@@ -239,9 +261,11 @@ public class Easy8583Ans {
         int tmplen = 0;
         long buf = 0,seat=1;
         byte[] bitMap = new byte[8];
+
+        init8583Fields(fieldsRecv);
+
         arraycopy(rxbuf,15,bitMap,0,8);
         arraycopy(rxbuf,0,pack.len,0,2);
-        arraycopy(rxbuf,2,pack.tpdu,0,5);
         arraycopy(rxbuf,7,pack.head,0,6);
         arraycopy(rxbuf,13,pack.msgType,0,2);
         arraycopy(rxbuf,15,pack.bitMap,0,8);
@@ -317,7 +341,7 @@ public class Easy8583Ans {
 
     }
 
-    private static void dataXor1(byte[] in,byte[] out, int len){
+    private static void dataXor1(byte[] in,int[] out, int len){
         for(int i =0; i < len; i++){
             out[i] |= (in[i]&0xff);
         }
@@ -332,18 +356,18 @@ public class Easy8583Ans {
     /**
      * 计算通信的MAC
      * @param buf
-     * @param buf_size
+     * @param datasize
      * @param mackey
      * @return
      */
-    public byte[] up_GetMac( byte[] buf, int buf_size, byte[] mackey){
+    public byte[] upGetMac( byte[] buf, int seat,int datasize, byte[] mackey){
 
-        int x = buf_size / 8; 		//计算有多少个完整的块
-        int n = buf_size % 8;
-        byte[] val = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+        int x = datasize / 8; 		//计算有多少个完整的块
+        int n = datasize % 8;
+       int[] val = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
         byte[] block = new byte[1024];
-        Arrays.fill(block, (byte) 0);
-        arraycopy(buf,0,block,0,buf_size);
+        Arrays.fill(block, (byte) 0);//清零
+        arraycopy(buf,seat,block,0,datasize);
         //y非0,则在其后补上0x00...
         if( n != 0 ){
             x += 1;                                    //将补上的这一块加上去
