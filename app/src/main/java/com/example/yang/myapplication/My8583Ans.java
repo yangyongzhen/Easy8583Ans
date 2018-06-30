@@ -164,7 +164,6 @@ public class My8583Ans extends Easy8583Ans {
         }
         //签到成功
         return 0;
-
     }
     /**
      * 银联二维码组包
