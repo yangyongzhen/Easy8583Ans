@@ -278,6 +278,10 @@ public class My8583Ans extends Easy8583Ans {
         return TPDU;
     }
 
+    /**
+     * 调用demo
+     * @param args
+     */
     public static void main(String[] args) {
         My8583Ans myans = new My8583Ans();
         //签到组包
@@ -315,6 +319,5 @@ public class My8583Ans extends Easy8583Ans {
         System.out.println(My8583Ans.bytesToHexString(send));
         System.out.println(myans.pack.toString());
         System.out.println(myans.getFields(myans.fieldsSend));
-
     }
 }

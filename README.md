@@ -158,7 +158,12 @@ public void frame8583QD( __8583Fields[] field, Pack tx){
 
 附带一个调用的demo:
 
-public static void main(String[] args) {
+/**
+     * 调用demo
+     * @param args
+     */
+	 
+    public static void main(String[] args) {
         My8583Ans myans = new My8583Ans();
         //签到组包
         myans.frame8583QD(myans.fieldsSend,myans.pack);
@@ -195,7 +200,6 @@ public static void main(String[] args) {
         System.out.println(My8583Ans.bytesToHexString(send));
         System.out.println(myans.pack.toString());
         System.out.println(myans.getFields(myans.fieldsSend));
-
     }
 	
 	
