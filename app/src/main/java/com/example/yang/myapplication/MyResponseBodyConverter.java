@@ -24,22 +24,8 @@ final class MyResponseBodyConverter<T> implements Converter<ResponseBody, T> {
 
     @Override public T convert(ResponseBody value) throws IOException {
         //Log.d("respond:",value.string());
-        Log.d("respond:",MyUtil.bytesToHexString(value.bytes()));
-        JsonReader jsonReader = gson.newJsonReader(value.charStream());
-        try {
-            T result = adapter.read(jsonReader);
-            if (jsonReader.peek() != JsonToken.END_DOCUMENT) {
-                throw new JsonIOException("JSON document was not fully consumed.");
-            }
-            return result;
-        } catch(Exception e) {
-            e.fillInStackTrace();
-        }
-        finally {
-            value.close();
-        }
-
-        return null;
+        //Log.d("respond:",MyUtil.bytesToHexString(value.bytes()));
+        return (T) value.bytes();
     }
 }
 

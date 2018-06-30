@@ -22,8 +22,8 @@ public class My8583Ans extends Easy8583Ans {
 
     //需要外部设置的参数有：商户号，终端号，主秘钥，TPDU(以下的为默认值，并提供set和get方法)
     //需要持久化存储这些参数，每次使用时加载
-    private static String manNum  = "001430170119999"; //商户号
-    private static String posNum  = "99999906"; //终端号
+    private static String manNum  = "898411341310014"; //商户号
+    private static String posNum  = "73782214"; //终端号
     private static String mainKey = "258FB0Ab70D025CDB99DF2C4D302D646"; //主秘钥
     private static String TPDU    = "6005010000";
     private static long   posSn = 1; //终端交易流水

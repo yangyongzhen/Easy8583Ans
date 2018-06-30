@@ -21,5 +21,5 @@ public interface ApiManager {
     @Headers({"User-Agent: Donjin Http 0.1","Cache-Control: no-cache","Content-Type: x-ISO-TPDU/x-auth","Accept-Encoding: *"})//需要添加头
    // @Multipart
     @POST("/")
-    Call<LoginResult> postData(@Body  RequestBody bodyhex);
+    Call<byte[]> postData(@Body  RequestBody bodyhex);
 }
