@@ -1,13 +1,7 @@
 package com.example.yang.myapplication;
 
-import android.util.Log;
-
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
-
-import static com.example.yang.myapplication.DesUtil.DES_decrypt_3;
 import static com.example.yang.myapplication.DesUtil.DES_encrypt;
-import static com.example.yang.myapplication.DesUtil.DES_encrypt_3;
 import static java.lang.System.arraycopy;
 /**
  * Created by yangyongzhen on 2018/06/27
@@ -16,51 +10,39 @@ import static java.lang.System.arraycopy;
 public class Easy8583Ans {
 
     private static final String TAG= " Easy8583Ans";
-
-    //通信涉及到的一些参数,内部使用
-    private static long commSn = 1; //通讯流水号
-    private static byte[] piciNum = new byte[3];//批次号
-    private static byte[] licenceNum = {0x33,0x30,0x36,0x30};//入网许可证编号
-
-    //需要外部设置的参数有：商户号，终端号，主秘钥，TPDU(以下的为默认值，并提供set和get方法)
-    private static String ManNum  = "001430170119999"; //商户号
-    private static String PosNum  = "99999906"; //终端号
-    private static String MainKey = "258FB0Ab70D025CDB99DF2C4D302D646"; //主秘钥
-    private static String TPDU    = "6005010000";
     /**
      * 定义8583的报文协议包结构 Len+Tpdu+Head+MsgType+BitMap+Data
      */
     public class Pack {
 
-        public byte[] Len;
-        public byte[] Tpdu;
-        public byte[] Head;
-        public byte[] MsgType;
-        public byte[] BitMap;
+        public byte[] len;
+        public byte[] tpdu;
+        public byte[] head;
+        public byte[] msgType;
+        public byte[] bitMap;
 
-        public byte[] TxBuffer;
-        public int TxLen;
+        public byte[] txBuffer;
+        public int txLen;
         public Pack() {
-            Len = new byte[2];
-            Tpdu = hexStringToBytes(TPDU);
-            Head = new byte[]{0x61, 0x31, 0x00, 0x31, 0x11,0x08};//这几项一般固定，不会变动
-            MsgType = new byte[2];
-            BitMap = new byte[8];
-            TxLen = 0;
-            TxBuffer = new byte[1024];
-
+            len = new byte[2];
+            tpdu = new byte[]{0x60, 0x05, 0x01, 0x00, 0x00};
+            head = new byte[]{0x61, 0x31, 0x00, 0x31, 0x11,0x08};//这几项一般固定，不会变动
+            msgType = new byte[2];
+            bitMap = new byte[8];
+            txBuffer = new byte[1024];
+            txLen = 0;
         }
 
         @Override
         public String toString() {
             return "Pack{" +
-                    "Len=" + bytesToHexString(Len) +
-                    ", Tpdu=" + bytesToHexString(Tpdu) +
-                    ", Head=" + bytesToHexString(Head) +
-                    ", MsgType=" + bytesToHexString(MsgType) +
-                    ", BitMap=" + bytesToHexString(BitMap) +
-                    ", TxLen=" + TxLen +
-                    ", TxBuffer=" + bytesToHexString(TxBuffer) +
+                    "len=" + bytesToHexString(len) +
+                    ", tpdu=" + bytesToHexString(tpdu) +
+                    ", head=" + bytesToHexString(head) +
+                    ", msgType=" + bytesToHexString(msgType) +
+                    ", bitMap=" + bytesToHexString(bitMap) +
+                    ", txLen=" + txLen +
+                    ", txBuffer=" + bytesToHexString(txBuffer) +
                     '}';
         }
     }
@@ -185,7 +167,7 @@ public class Easy8583Ans {
      * @param field
      * @param pk
     */
-    private void pack8583Fields( __8583Fields[] field, Pack pk)
+    public void pack8583Fields( __8583Fields[] field, Pack pk)
     {
         int j = 0;
         int len = 23;
@@ -198,49 +180,50 @@ public class Easy8583Ans {
                 seat = 0x80;
             }
             if(field[i].ishave == 1) {
-                pk.BitMap[j-1] |= seat;//根据每个filed中的ishave是否为1，自动计算BitMap
+                pk.bitMap[j-1] |= seat;//根据每个filed中的ishave是否为1，自动计算BitMap
                 if(field[i].type == 0){
                     //根据每个域的数据类型，自动截取长度组包
-                    arraycopy(field[i].data,0,pk.TxBuffer,len,field[i].len);//数据
+                    arraycopy(field[i].data,0,pk.txBuffer,len,field[i].len);//数据
                     len += field[i].len;
                 }
                 else if(field[i].type == 1){
                     //域长度
-                    pk.TxBuffer[len] = (byte)field[i].len;
-                    tmplen = Integer.parseInt(String.format("%02x",pk.TxBuffer[len]),10);
+                    pk.txBuffer[len] = (byte)field[i].len;
+                    tmplen = Integer.parseInt(String.format("%02x",pk.txBuffer[len]),10);
                     //域数据
                     if((i==1)||(i==31)||(i==34)||(i==47)||(i==59)||(i==60))
                     {
                         tmplen = ((tmplen/2) + (tmplen%2));
                     }
                     len += 1;
-                    arraycopy(field[i].data,0,pk.TxBuffer,len,tmplen);//数据
+                    arraycopy(field[i].data,0,pk.txBuffer,len,tmplen);//数据
                     len += tmplen;
                 }
                 else if(field[i].type == 2){
-                    pk.TxBuffer[len] = (byte)(field[i].len>>8);
-                    pk.TxBuffer[len+1] = (byte)field[i].len;
-                    tmplen = Integer.parseInt(String.format("%02x%02x",pk.TxBuffer[len],pk.TxBuffer[len+1]),10);
+                    pk.txBuffer[len] = (byte)(field[i].len>>8);
+                    pk.txBuffer[len+1] = (byte)field[i].len;
+                    tmplen = Integer.parseInt(String.format("%02x%02x",pk.txBuffer[len],pk.txBuffer[len+1]),10);
                     if((i==1)||(i==31)||(i==34)||(i==47)||(i==59)||(i==60))
                     {
                         tmplen = ((tmplen/2) + (tmplen%2));
                     }
                     len += 2;
-                    arraycopy(field[i].data,0,pk.TxBuffer,len,tmplen);//数据
+                    arraycopy(field[i].data,0,pk.txBuffer,len,tmplen);//数据
                     len += tmplen;
                 }
 
             }
         }
-        pk.TxLen = len;
-        pk.Len[0] = (byte)((len-2) << 8);
-        pk.Len[1] = (byte)(len-2);
-        arraycopy(pk.Len,0,pk.TxBuffer,0,2);
-        arraycopy(pk.Tpdu,0,pk.TxBuffer,2,5);
-        arraycopy(pk.Head,0,pk.TxBuffer,7,6);
-        arraycopy(pk.MsgType,0,pk.TxBuffer,13,2);
-        arraycopy(pk.BitMap,0,pk.TxBuffer,15,8);
-        commSn++; //通讯流水每次加一
+        pk.txLen = len;
+        pk.len[0] = (byte)((len-2) << 8);
+        pk.len[1] = (byte)(len-2);
+        arraycopy(pk.len,0,pk.txBuffer,0,2);
+        arraycopy(pk.tpdu,0,pk.txBuffer,2,5);
+        arraycopy(pk.head,0,pk.txBuffer,7,6);
+        arraycopy(pk.msgType,0,pk.txBuffer,13,2);
+        arraycopy(pk.bitMap,0,pk.txBuffer,15,8);
+
+        //自动算MAC，填MAC
     }
 
     /**
@@ -257,11 +240,11 @@ public class Easy8583Ans {
         long buf = 0,seat=1;
         byte[] bitMap = new byte[8];
         arraycopy(rxbuf,15,bitMap,0,8);
-        arraycopy(rxbuf,0,pack.Len,0,2);
-        arraycopy(rxbuf,2,pack.Tpdu,0,5);
-        arraycopy(rxbuf,7,pack.Head,0,6);
-        arraycopy(rxbuf,13,pack.MsgType,0,2);
-        arraycopy(rxbuf,15,pack.BitMap,0,8);
+        arraycopy(rxbuf,0,pack.len,0,2);
+        arraycopy(rxbuf,2,pack.tpdu,0,5);
+        arraycopy(rxbuf,7,pack.head,0,6);
+        arraycopy(rxbuf,13,pack.msgType,0,2);
+        arraycopy(rxbuf,15,pack.bitMap,0,8);
         len += 23;
         for(int i = 0;i < 8;i++) {
             buf = ((buf<<8) | (bitMap[i]&0xff));
@@ -312,11 +295,11 @@ public class Easy8583Ans {
     public String getFields( __8583Fields[] field){
 
         StringBuffer str= new StringBuffer();
-        str.append(String.format("Len:\t%s\n",bytesToHexString(pack.Len)));
-        str.append(String.format("TPDU:\t%s\n",bytesToHexString(pack.Tpdu)));
-        str.append(String.format("Head:\t%s\n",bytesToHexString(pack.Head)));
-        str.append(String.format("MsgType:\t%s\n",bytesToHexString(pack.MsgType)));
-        str.append(String.format("BitMap:\t%s\n",bytesToHexString(pack.BitMap)));
+        str.append(String.format("Len:\t%s\n",bytesToHexString(pack.len)));
+        str.append(String.format("TPDU:\t%s\n",bytesToHexString(pack.tpdu)));
+        str.append(String.format("Head:\t%s\n",bytesToHexString(pack.head)));
+        str.append(String.format("MsgType:\t%s\n",bytesToHexString(pack.msgType)));
+        str.append(String.format("BitMap:\t%s\n",bytesToHexString(pack.bitMap)));
         str.append("-------------------------------------------------\n");
         for(int i = 0; i < 64; i++) {
             if(field[i].ishave == 1) {
@@ -334,139 +317,64 @@ public class Easy8583Ans {
 
     }
 
-    /**
-     * 签到报文组帧
-     * @param field
-     * @param tx
-     */
-    public void frame8583QD( __8583Fields[] field, Pack tx){
+    private static void dataXor1(byte[] in,byte[] out, int len){
+        for(int i =0; i < len; i++){
+            out[i] |= (in[i]&0xff);
+        }
+    }
 
-        //消息类型
-        tx.MsgType[0] = 0x08;
-        tx.MsgType[1] = 0x00;
-        //11域，受卡方系统跟踪号BCD 通讯流水
-        field[10].ishave = 1;
-        field[10].len = 3;
-        String tmp = String.format("%06d",commSn);
-        field[10].data = hexStringToBytes(tmp);
-        //41域，终端号
-        field[40].ishave = 1;
-        field[40].len = 8;
-        field[40].data = PosNum.getBytes();
-        //42域，商户号
-        field[41].ishave = 1;
-        field[41].len = 15;
-        field[41].data = ManNum.getBytes();
-        //60域
-        field[59].ishave = 1;
-        field[59].len = 0x11;
-        field[59].data = new byte[6];
-        field[59].data[0] = 0x00;
-        arraycopy(piciNum,0,field[59].data,1,3);
-        field[59].data[4] = 0x00;
-        field[59].data[5] = 0x30;
-        //62域
-        field[61].ishave = 1;
-        field[61].len = 0x25;
-        field[61].data = new byte[25];
-        String str = "Sequence No12";
-        arraycopy(str.getBytes(),0,field[61].data,0,13);
-        arraycopy(licenceNum,0,field[61].data,13,4);
-        arraycopy(PosNum.getBytes(),0,field[61].data,17,8);
-        //63域
-        field[62].ishave = 1;
-        field[62].len = 0x03;
-        field[62].data = new byte[3];
-        field[62].data[0] = 0x30;
-        field[62].data[1] = 0x30;
-        field[62].data[2] = 0x31;
-        /*报文组帧，自动组织这些域到Pack的TxBuffer中*/
-        pack8583Fields(field,tx);
+    private static void dataXor(byte[] source, byte[] dest, int size, byte[] out ) {
+        for( int i = 0; i < size; i++ ) {
+            out[i] = (byte)((dest[i]&0xff) ^ (source[i]&0xff));
+        }
     }
 
     /**
-     * 8583签到的响应报文解析
-     * @param rxbuf
-     * @param rxlen
-     * @return 0，成功 非0，失败
+     * 计算通信的MAC
+     * @param buf
+     * @param buf_size
+     * @param mackey
+     * @return
      */
-    public int ans8583QD(byte[] rxbuf,int rxlen){
+    public byte[] up_GetMac( byte[] buf, int buf_size, byte[] mackey){
 
-        int ret = 0;
-        ret = ans8583Fields(rxbuf,rxlen,fieldsRecv);
-        if(ret != 0) {
-            //Log.d(TAG,"解析失败！");
-            System.out.println("<-Er 解析失败！");
-            return ret;
+        int x = buf_size / 8; 		//计算有多少个完整的块
+        int n = buf_size % 8;
+        byte[] val = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+        byte[] block = new byte[1024];
+        Arrays.fill(block, (byte) 0);
+        arraycopy(buf,0,block,0,buf_size);
+        //y非0,则在其后补上0x00...
+        if( n != 0 ){
+            x += 1;                                    //将补上的这一块加上去
         }
-        //Log.d(TAG,"解析成功！");
-        System.out.println("->ok 解析成功！");
-        //消息类型判断
-        if((pack.MsgType[0] != 0x08)||(pack.MsgType[1]!= 0x10)) {
-            //Log.d(TAG,"消息类型错！");
-            return 2;
+        byte[] tmp = new byte[8];
+        for(int i = 0,j = 0;i < x;i++){
+            arraycopy(block,j,tmp,0,8);
+            dataXor1(tmp,val,8);
+            j += 8;
         }
-        //应答码判断
-        if((fieldsRecv[38].data[0] != 0x30)||(fieldsRecv[38].data[1] != 0x30)){
-            //Log.d(TAG,"应答码不正确！");
-            //Log.d(TAG,String.format("应答码:%02x%02x",fieldsRecv[38].data[0],fieldsRecv[38].data[1]));
-            return 3;
-        }
-        //跟踪号比较
-        if(!Arrays.equals(fieldsSend[10].data,fieldsRecv[10].data)){
-            //return 4;
-        }
-        //终端号比较
-        if(!Arrays.equals(fieldsSend[40].data,fieldsRecv[40].data)){
-            //return 5;
-        }
-        //商户号比较
-        if(!Arrays.equals(fieldsSend[41].data,fieldsRecv[41].data)){
-            //return 6;
-        }
-        //3DES解密PIN KEY
-        byte[] data = new byte[16];
-        arraycopy(fieldsRecv[61].data,0,data,0,16);
-        byte[] pinkey = DES_decrypt_3(data,hexStringToBytes(MainKey));
-        //解密后的结果对8Byte全0做3DES加密运算
-        System.out.println("pinkey:"+bytesToHexString(pinkey));
-        byte[] tmp= {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
-        byte[] out =  DES_encrypt_3(tmp,pinkey);
-        //对比pincheck是否一致
-        byte[] check = new byte[4];
-        byte[] pincheck = new byte[4];
-        arraycopy(out,0,check,0,4);
-        arraycopy(fieldsRecv[61].data,16,pincheck,0,4);
-        if(!Arrays.equals(check,pincheck)) {
-            System.out.println("<-Er PIK错误");
-            return 7;
-        }
-        else {
-            System.out.println("<-ok PIK正确");
-        }
-        //3DES解密MAC KEY
-        arraycopy(fieldsRecv[61].data,20,data,0,16);
-        byte[] mackey = DES_decrypt_3(data,hexStringToBytes(MainKey));
-        //解密后的结果对8Byte全0做DES加密运算
-        System.out.println("mackey:"+bytesToHexString(mackey));
-        out =  DES_encrypt(tmp,mackey);
+        String Bbuf = String.format("%02x%02x%02x%02x%02x%02x%02x%02x",val[0],val[1],
+                val[2],val[3],val[4],val[5],val[6],val[7]);
+        byte[] bbuf =  Bbuf.getBytes();
+        byte[] b1 = new byte[8];
+        byte[] b2 = new byte[8];
+        arraycopy(bbuf,0,b1,0,8);
+        arraycopy(bbuf,8,b2,0,8);
+        byte[] tmpmac;
+        tmpmac = DES_encrypt(b1,mackey);
 
-        byte[] maccheck = new byte[4];
-        arraycopy(out,0,check,0,4);
-        arraycopy(fieldsRecv[61].data,36,maccheck,0,4);
-        if(!Arrays.equals(check,maccheck)) {
-            System.out.println("<-Er MAC错误");
-            return 8;
-        }
-        else {
-            System.out.println("<-ok MAC正确");
-        }
-        //签到成功
-        return 0;
+        byte[] Abuf = new byte[8];
+        dataXor( tmpmac, b2, 8, Abuf );
+        tmpmac = DES_encrypt(Abuf,mackey);
 
+        String str1 = String.format("%02x%02x%02x%02x%02x%02x%02x%02x",tmpmac[0],tmpmac[1],tmpmac[2]
+                ,tmpmac[3],tmpmac[4],tmpmac[5],tmpmac[6],tmpmac[7]);
+
+        byte[] mac = new byte[8];
+        arraycopy(str1.getBytes(),0,mac,0,8);
+        return mac;
     }
-
-
 
     private static byte charToByte(char c) {
         return (byte) "0123456789ABCDEF".indexOf(c);
@@ -502,45 +410,6 @@ public class Easy8583Ans {
 
         }
         return d;
-    }
-
-    public static void setPosNum(String posNum) {
-        PosNum = posNum;
-    }
-    public static void setMainKey(String mainKey) {
-        MainKey = mainKey;
-    }
-    public static void setTPDU(String TPDU) {
-        Easy8583Ans.TPDU = TPDU;
-    }
-    public static String getPosNum() {
-        return PosNum;
-    }
-    public static String getMainKey() {
-        return MainKey;
-    }
-    public static String getTPDU() {
-        return TPDU;
-    }
-    public static String getManNum() {
-        return ManNum;
-    }
-    public static void setManNum(String manNum) {
-        ManNum = manNum;
-    }
-
-
-    public static void main(String[] args) {
-        Easy8583Ans mypack = new Easy8583Ans();
-        mypack.frame8583QD(mypack.fieldsSend,mypack.pack);
-        System.out.println(mypack.pack.toString());
-        System.out.println(mypack.getFields(mypack.fieldsSend));
-
-        String recvstr ="007960000001386131003111080810003800010AC0001450021122130107200800085500323231333031343931333239303039393939393930363030313433303137303131393939390011000005190030004046F161A743497B32EAC760DF5EA57DF5900ECCE3977731A7EA402DDF0000000000000000CFF1592A";
-        byte[] bt = Easy8583Ans.hexStringToBytes(recvstr);
-        // mypack.ans8583Fields(bt,bt.length,mypack.fieldsRecv);
-        mypack.ans8583QD(bt,bt.length);
-        System.out.println(mypack.getFields(mypack.fieldsRecv));
     }
 
 

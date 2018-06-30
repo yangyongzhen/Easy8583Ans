@@ -36,13 +36,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this,"btn2 clicked", Toast.LENGTH_SHORT).show();
 
-                Easy8583Ans mypack = new Easy8583Ans();
+                My8583Ans mypack = new My8583Ans();
                 mypack.frame8583QD(mypack.fieldsSend,mypack.pack);
                 Log.d("8583:",mypack.pack.toString());
                 Log.d("fields send",mypack.getFields(mypack.fieldsSend));
 
                 String str ="0057600087000061310031110808000020000000C0001650001536313030303030313839383633303134313131313038350011000000000030002553657175656E6365204E6F31323330363036313030303030310003303031";
-                byte[] bt = Easy8583Ans.hexStringToBytes(str);
+                byte[] bt = My8583Ans.hexStringToBytes(str);
                // mypack.ans8583Fields(bt,bt.length,mypack.fieldsRecv);
                 mypack.ans8583QD(bt,bt.length);
                 Log.d("fields recv",mypack.getFields(mypack.fieldsRecv));

@@ -12,8 +12,8 @@ import static com.example.yang.myapplication.MyUtil.hexStringToBytes;
 import static java.lang.System.arraycopy;
 
 /**
- * PBOC3DES 加密算法
- * @author Administrator
+ * DES 加密算法 DES和3DES ECB模式的加解密
+ * @author yangyongzhen
  *
  */
 public class DesUtil {
@@ -22,7 +22,7 @@ public class DesUtil {
     /**
      * 加密
      * @param data byte[]
-     * @param key String
+     * @param key byte[]
      * @return byte[]
      */
     public static byte[] DES_encrypt(byte[] data, byte[] key) {
@@ -51,10 +51,9 @@ public class DesUtil {
     }
     /**
      * 解密
-     * @param src byte[]
-     * @param key String
+     * @param data byte[]
+     * @param key byte[]
      * @return byte[]
-     * @throws Exception
      */
     public static byte[] DES_decrypt(byte[] data, byte[] key) {
         try{
@@ -80,9 +79,9 @@ public class DesUtil {
 
     public static byte[] DES_encrypt_3(byte[] datasource, byte[] key){
 
-        if ((key.length!= 16) || ((datasource.length%8 )!= 0))
+        if ((key.length!= 16) || ((datasource.length%8 )!= 0)){
             return null;
-
+        }
         byte[] Lkey = new byte[8];
         byte[] Rkey = new byte[8];
         arraycopy(key,0,Lkey,0,8);
@@ -100,20 +99,18 @@ public class DesUtil {
 
     public static byte[] DES_decrypt_3(byte[] datasource, byte[] key){
 
-        if ((key.length!= 16) || ((datasource.length%8 )!= 0))
-        return null;
-
+        if ((key.length!= 16) || ((datasource.length%8 )!= 0)) {
+            return null;
+        }
         byte[] Lkey = new byte[8];
         byte[] Rkey = new byte[8];
         arraycopy(key,0,Lkey,0,8);
         arraycopy(key,8,Rkey,0,8);
-
         byte[] outdata,tmpdata;
 
         outdata = DES_decrypt(datasource,Lkey);//解
         tmpdata = DES_encrypt(outdata,Rkey);//加
         outdata = DES_decrypt(tmpdata,Lkey);//解
-
         return outdata;
     }
     public static void main(String[] args) {
