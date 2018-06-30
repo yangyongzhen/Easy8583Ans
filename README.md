@@ -12,6 +12,7 @@ easy and simple 8583 Protocol Analysis  for java
      * @param field
      * @param tx
      */
+	 
 public void frame8583QD( __8583Fields[] field, Pack tx){
 
     //消息类型
@@ -64,6 +65,7 @@ public void frame8583QD( __8583Fields[] field, Pack tx){
      * @param rxlen
      * @return 0，成功 非0，失败
      */
+	 
     public int ans8583QD(byte[] rxbuf,int rxlen){
 
         int ret = 0;
@@ -180,7 +182,21 @@ public static void main(String[] args) {
             System.out.println("签到成功!");
             System.out.println(myans.getFields(myans.fieldsRecv));
         }
-	}
+
+        //二维码组包
+        System.out.println("->二维码交易 demo");
+        String qrcode = "6223360612494957384";
+        int money = 1; //1分
+        myans.frame8583Qrcode(qrcode,money,myans.fieldsSend,myans.pack);
+        //打印出待发送的报文
+        send = new byte[myans.pack.txLen];
+        arraycopy(myans.pack.txBuffer,0,send,0,myans.pack.txLen);
+        System.out.println("->send:");
+        System.out.println(My8583Ans.bytesToHexString(send));
+        System.out.println(myans.pack.toString());
+        System.out.println(myans.getFields(myans.fieldsSend));
+
+    }
 	
 	
 ->send:
