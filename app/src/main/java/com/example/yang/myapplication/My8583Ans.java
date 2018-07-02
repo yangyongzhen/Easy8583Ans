@@ -1,5 +1,7 @@
 package com.example.yang.myapplication;
 
+import android.util.Log;
+
 import java.util.Arrays;
 
 import static com.example.yang.myapplication.DesUtil.DES_decrypt_3;
@@ -244,6 +246,45 @@ public class My8583Ans extends Easy8583Ans {
         //这个域要求填MAC，只需按这样填，MAC的计算在pack8583Fields自动完成了
         /*报文组帧，自动组织这些域到Pack的TxBuffer中*/
         pack8583Fields(field,tx);
+    }
+
+    public int ans8583Qrcode(byte[] rxbuf,int rxlen){
+
+        int ret = 0;
+        ret = ans8583Fields(rxbuf,rxlen,fieldsRecv);
+        if(ret != 0) {
+            //Log.d(TAG,"解析失败！");
+            System.out.println("<-Er 解析失败！");
+            return ret;
+        }
+        //Log.d(TAG,"解析成功！");
+        System.out.println("->ok 解析成功！");
+        //消息类型判断
+        if((pack.msgType[0] != 0x02)||(pack.msgType[1]!= 0x10)) {
+            //Log.d(TAG,"消息类型错！");
+            System.out.println("消息类型错！");
+            return 2;
+        }
+        //应答码判断
+        if((fieldsRecv[38].data[0] != 0x30)||(fieldsRecv[38].data[1] != 0x30)){
+            Log.d(TAG,"应答码不正确！");
+            Log.d(TAG,String.format("应答码:%02x%02x",fieldsRecv[38].data[0],fieldsRecv[38].data[1]));
+            return 3;
+        }
+        //跟踪号比较
+        if(!Arrays.equals(fieldsSend[10].data,fieldsRecv[10].data)){
+            return 4;
+        }
+        //终端号比较
+        if(!Arrays.equals(fieldsSend[40].data,fieldsRecv[40].data)){
+            return 5;
+        }
+        //商户号比较
+        if(!Arrays.equals(fieldsSend[41].data,fieldsRecv[41].data)){
+            return 6;
+        }
+        //成功
+        return 0;
     }
 
     public static void setManNum(String manNum) {

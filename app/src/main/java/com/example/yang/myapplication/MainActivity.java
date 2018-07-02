@@ -18,18 +18,38 @@ import static java.lang.System.arraycopy;
 
 public class MainActivity extends AppCompatActivity {
 
-    View btn1,btn2;
+    View btn1,btn2,btn3;
+    OkHttpClient client = OkHttp3Utils.getOkHttpSingletonInstance(MainActivity.this);
+    String url = "https://140.207.168.62:30000/";
+    //String url = "http://3s.dkys.org:16932";
+    Retrofit retrofit = new Retrofit.Builder().client(client).baseUrl(url)
+            .addConverterFactory(MyConverterFactory.create()).build();
+    ApiManager apiService = retrofit.create(ApiManager.class);
+
+    final My8583Ans myans = new My8583Ans();
+    //myans.s
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn1 = findViewById(R.id.button1);
         btn2 = findViewById(R.id.button2);
+        btn3 = findViewById(R.id.button3);
+
+        My8583Ans.setMainKey("B9257F2A4C317675709EEF89D9D54A89");
+
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this,"btn1 clicked", Toast.LENGTH_SHORT).show();
                 request1();
+            }
+        });
+        btn3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,"btn3 clicked", Toast.LENGTH_SHORT).show();
+                request2();
             }
         });
 
@@ -53,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     public void request() {
 
         OkHttpClient client = OkHttp3Utils.getOkHttpSingletonInstance(MainActivity.this);
@@ -89,14 +110,19 @@ public class MainActivity extends AppCompatActivity {
 
     public void request1() {
 
+        /*
         OkHttpClient client = OkHttp3Utils.getOkHttpSingletonInstance(MainActivity.this);
         String url = "https://140.207.168.62:30000/";
         //String url = "http://3s.dkys.org:16932";
         Retrofit retrofit = new Retrofit.Builder().client(client).baseUrl(url)
                 .addConverterFactory(MyConverterFactory.create()).build();
         ApiManager apiService = retrofit.create(ApiManager.class);
+
         //String qdstr ="0057600087000061310031110808000020000000C0001650001536313030303030313839383633303134313131313038350011000000000030002553657175656E6365204E6F31323330363036313030303030310003303031";
         final My8583Ans myans = new My8583Ans();
+        //myans.s
+        My8583Ans.setMainKey("B9257F2A4C317675709EEF89D9D54A89");
+        */
         //签到组包
         myans.frame8583QD(myans.fieldsSend,myans.pack);
         byte[] send = new byte[myans.pack.txLen];
@@ -124,6 +150,56 @@ public class MainActivity extends AppCompatActivity {
                     }
                         //byte[] arr = response.raw().toString();
                         //arr[0] = 0;
+                    //response.body().show();
+                } else {
+                    //直接操作UI 返回的respone被直接解析成你指定的modle
+                    Log.d("AA","失败");
+                    //response.body().show();
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<byte[]> call, Throwable t) {
+
+                // do onFailure代码
+                Log.d("AA","失败", t);
+            }
+        });
+    }
+
+    public void request2() {
+        //二维码交易
+        String qrcode = "6225621270761967496";
+        int money = 1; //1分
+        myans.frame8583Qrcode(qrcode,money,myans.fieldsSend,myans.pack);
+        byte[] send = new byte[myans.pack.txLen];
+        arraycopy(myans.pack.txBuffer,0,send,0,myans.pack.txLen);
+        String sendstr = My8583Ans.bytesToHexString(send);
+        DataBean data = new DataBean(sendstr);
+        Call<byte[]> call = apiService.postData(data.bodyhex);
+        call.enqueue(new Callback<byte[]>() {
+            @Override
+            public void onResponse(Call<byte[]> call, Response<byte[]> response) {
+                if (response.isSuccessful()) {
+                    // do SomeThing
+                    Log.d("AA","成功");
+                    Log.d("AA",response.raw().toString());
+                    String strrecv = MyUtil.bytesToHexString(response.body());
+                    Log.d("respondAA:",strrecv);
+                    //解析
+                    System.out.println("开始解析...");
+                    byte[] recv = My8583Ans.hexStringToBytes(strrecv);
+                    int ret = myans.ans8583Qrcode(recv,recv.length);
+                    if(ret == 0){
+                        //打印出解析成功的各个域
+                        System.out.println("成功!");
+                        System.out.println(myans.getFields(myans.fieldsRecv));
+                    }else{
+                        System.out.println(myans.getFields(myans.fieldsRecv));
+                    }
+                    //byte[] arr = response.raw().toString();
+                    //arr[0] = 0;
                     //response.body().show();
                 } else {
                     //直接操作UI 返回的respone被直接解析成你指定的modle

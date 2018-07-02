@@ -10,7 +10,7 @@ import static java.lang.System.arraycopy;
 public class Easy8583Ans {
 
     private static final String TAG= " Easy8583Ans";
-    private static String macKey ; //工作秘钥
+    private static String macKey="31313131313131313131313131313131" ; //工作秘钥
 
     public static void setMacKey(String macKey) {
         Easy8583Ans.macKey = macKey;
@@ -174,8 +174,6 @@ public class Easy8583Ans {
 
         field[63].type = 0;
         field[63].len = 8;
-
-        Arrays.fill(pack.txBuffer,(byte)0);
     }
     /**
      * 该方法不需要外部调用，该方法自动完成各个域的组包和BitMap的形成及报文长度的计算
@@ -189,6 +187,9 @@ public class Easy8583Ans {
         int len = 23;
         int tmplen = 0;
         int seat = 0x80;
+
+        Arrays.fill(pack.txBuffer,(byte)0);
+        
         for(int i = 0;i < 64; i++) {
             seat = (seat >>1 );
             if((i%8) == 0) {

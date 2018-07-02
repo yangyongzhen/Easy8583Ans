@@ -20,6 +20,12 @@
         android:layout_height="wrap_content"
         android:text="Test2"
          />
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Test3"
+        />
     <EditText
         android:id="@+id/editText"
         android:layout_width="match_parent"
