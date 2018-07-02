@@ -189,7 +189,7 @@ public class Easy8583Ans {
         int seat = 0x80;
 
         Arrays.fill(pack.txBuffer,(byte)0);
-        
+
         for(int i = 0;i < 64; i++) {
             seat = (seat >>1 );
             if((i%8) == 0) {

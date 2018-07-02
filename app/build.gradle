@@ -30,4 +30,8 @@ dependencies {
     implementation('com.squareup.retrofit2:converter-gson:2.4.0') { exclude group: 'com.squareup.okhttp3' }
     implementation 'com.squareup.okhttp3:okhttp:3.7.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.7.0'
+	
+	//implementation project(':zxinglib')
+    implementation 'com.journeyapps:zxing-android-embedded:3.5.0'
+    implementation 'com.google.zxing:core:3.3.1'
 }

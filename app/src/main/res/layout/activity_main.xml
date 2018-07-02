@@ -26,6 +26,12 @@
         android:layout_height="wrap_content"
         android:text="Test3"
         />
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="扫一扫"
+        />
     <EditText
         android:id="@+id/editText"
         android:layout_width="match_parent"

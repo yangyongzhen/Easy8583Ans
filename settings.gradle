@@ -1,1 +1,3 @@
 include ':app'
+//include ':zxinglib'
+//project (':zxinglib').projectDir = new File('./libraries/zxinglib');

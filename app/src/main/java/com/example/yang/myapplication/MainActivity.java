@@ -1,5 +1,6 @@
 package com.example.yang.myapplication;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,9 +17,16 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static java.lang.System.arraycopy;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
+
 public class MainActivity extends AppCompatActivity {
 
-    View btn1,btn2,btn3;
+    public final String TAG = "MainActivity";
+    View btn1,btn2,btn3,btn4;
+
+    IntentIntegrator integrator;
     OkHttpClient client = OkHttp3Utils.getOkHttpSingletonInstance(MainActivity.this);
     String url = "https://140.207.168.62:30000/";
     //String url = "http://3s.dkys.org:16932";
@@ -27,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     ApiManager apiService = retrofit.create(ApiManager.class);
 
     final My8583Ans myans = new My8583Ans();
+
+
     //myans.s
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         btn1 = findViewById(R.id.button1);
         btn2 = findViewById(R.id.button2);
         btn3 = findViewById(R.id.button3);
+        btn4 = findViewById(R.id.button4);
 
         My8583Ans.setMainKey("B9257F2A4C317675709EEF89D9D54A89");
 
@@ -49,7 +60,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this,"btn3 clicked", Toast.LENGTH_SHORT).show();
-                request2();
+                request2("6225621270761967496");
+            }
+        });
+        btn4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                integrator = new IntentIntegrator(MainActivity.this);
+                // 设置要扫描的条码类型，ONE_D_CODE_TYPES：一维码，QR_CODE_TYPES-二维码
+                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+                integrator.setCaptureActivity(ScanActivity.class);
+                integrator.setPrompt("请扫描"); //底部的提示文字，设为""可以置空
+                integrator.setCameraId(0); //前置或者后置摄像头
+                integrator.setBeepEnabled(true); //扫描成功的「哔哔」声，默认开启
+                integrator.setOrientationLocked(true);
+                integrator.setBarcodeImageEnabled(true);
+                integrator.setTimeout(60*1000);
+                integrator.initiateScan();
+
+                Log.e("MainActivity", "显示扫一扫页面");
             }
         });
 
@@ -168,9 +198,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void request2() {
+    public void request2(String qrcode) {
         //二维码交易
-        String qrcode = "6225621270761967496";
+        //String qrcode = "6225621270761967496";
         int money = 1; //1分
         myans.frame8583Qrcode(qrcode,money,myans.fieldsSend,myans.pack);
         byte[] send = new byte[myans.pack.txLen];
@@ -216,5 +246,24 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("AA","失败", t);
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() == null) {
+                //payFrament.setShowLayout(2);
+                Log.i(TAG, "扫码失败");
+            } else {
+                String qrcode = result.getContents();
+                Log.i(TAG, "扫码结果:" + qrcode);
+                request2(qrcode);
+            }
+        }
+        else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }
