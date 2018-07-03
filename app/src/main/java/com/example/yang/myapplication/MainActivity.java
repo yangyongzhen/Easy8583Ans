@@ -17,16 +17,18 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static java.lang.System.arraycopy;
 
-import com.google.zxing.integration.android.IntentIntegrator;
-import com.google.zxing.integration.android.IntentResult;
+//import com.google.zxing.integration.android.IntentIntegrator;
+//import com.google.zxing.integration.android.IntentResult;
+import com.karics.library.zxing.android.CaptureActivity;
 
 
 public class MainActivity extends AppCompatActivity {
 
     public final String TAG = "MainActivity";
+    private static final int REQUEST_CODE_SCAN = 0x0000;
     View btn1,btn2,btn3,btn4;
 
-    IntentIntegrator integrator;
+    //IntentIntegrator integrator;
     OkHttpClient client = OkHttp3Utils.getOkHttpSingletonInstance(MainActivity.this);
     String url = "https://140.207.168.62:30000/";
     //String url = "http://3s.dkys.org:16932";
@@ -67,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
+                Intent intent = new Intent(MainActivity.this,
+                        CaptureActivity.class);
+                startActivityForResult(intent, REQUEST_CODE_SCAN);
+               /*
                 integrator = new IntentIntegrator(MainActivity.this);
                 // 设置要扫描的条码类型，ONE_D_CODE_TYPES：一维码，QR_CODE_TYPES-二维码
                 integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
@@ -80,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
                 integrator.initiateScan();
 
                 Log.e("MainActivity", "显示扫一扫页面");
+                */
+
             }
         });
 
@@ -250,6 +258,22 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_SCAN && resultCode == RESULT_OK) {
+            if (data != null) {
+                String content = data.getStringExtra("codedContent");
+                Log.i(TAG, "扫码结果:" + content);
+                request2(content);
+                //byte[] bytes = data.getByteArrayExtra(DECODED_RAWBYTES_KEY);
+                //qrCoded.setText("解码结果： \n" +content, TextView.BufferType.SPANNABLE );
+                //qrCoded.setText("解码结果1： \n" +  bytesToHexString(bytes), TextView.BufferType.SPANNABLE );
+
+                }
+                else{
+
+                }
+        }
+        /*
         //super.onActivityResult(requestCode, resultCode, data);
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (result != null) {
@@ -264,6 +288,6 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             super.onActivityResult(requestCode, resultCode, data);
-        }
+        }*/
     }
 }
