@@ -1,6 +1,6 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.retrofit;
 
-class LoginResult {
+public class LoginResult {
 
     private int status;
 

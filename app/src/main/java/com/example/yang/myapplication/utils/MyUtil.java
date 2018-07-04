@@ -1,4 +1,4 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.utils;
 
 public class MyUtil {
 

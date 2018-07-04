@@ -1,7 +1,7 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.ans8583;
 
 import java.util.Arrays;
-import static com.example.yang.myapplication.DesUtil.DES_encrypt;
+import static com.example.yang.myapplication.utils.DesUtil.DES_encrypt;
 import static java.lang.System.arraycopy;
 /**
  * Created by yangyongzhen on 2018/06/27
@@ -10,7 +10,7 @@ import static java.lang.System.arraycopy;
 public class Easy8583Ans {
 
     private static final String TAG= " Easy8583Ans";
-    private static String macKey="31313131313131313131313131313131" ; //工作秘钥
+    private static String macKey="da910898a794e0fe2a0bf090cc0bdab5" ; //工作秘钥
 
     public static void setMacKey(String macKey) {
         Easy8583Ans.macKey = macKey;

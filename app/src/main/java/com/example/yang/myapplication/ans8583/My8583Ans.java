@@ -1,12 +1,12 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.ans8583;
 
 import android.util.Log;
 
 import java.util.Arrays;
 
-import static com.example.yang.myapplication.DesUtil.DES_decrypt_3;
-import static com.example.yang.myapplication.DesUtil.DES_encrypt;
-import static com.example.yang.myapplication.DesUtil.DES_encrypt_3;
+import static com.example.yang.myapplication.utils.DesUtil.DES_decrypt_3;
+import static com.example.yang.myapplication.utils.DesUtil.DES_encrypt;
+import static com.example.yang.myapplication.utils.DesUtil.DES_encrypt_3;
 import static java.lang.System.arraycopy;
 
 /**
@@ -29,7 +29,7 @@ public class My8583Ans extends Easy8583Ans {
     private static String mainKey = "258FB0Ab70D025CDB99DF2C4D302D646"; //主秘钥
     private static String TPDU    = "6005010000";
     private static long   posSn = 1; //终端交易流水
-    My8583Ans(){
+    public My8583Ans(){
 
         //通过子类修改父类的配置
         pack.tpdu = hexStringToBytes(TPDU);

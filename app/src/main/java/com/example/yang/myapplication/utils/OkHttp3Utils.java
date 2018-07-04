@@ -1,9 +1,11 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.utils;
 
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.example.yang.myapplication.activity.MyAppcation;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +39,7 @@ public class OkHttp3Utils {
                     okHttpClient = new OkHttpClient();
                     //设置合理的超时
                     OkHttpClient.Builder httpBuilder = new OkHttpClient.Builder()
-                            .readTimeout(3, TimeUnit.SECONDS)
+                            .readTimeout(16, TimeUnit.SECONDS)
                             .connectTimeout(DEFAULT_TIMEOUT, TimeUnit.SECONDS) //设置连接超时 30秒
                             .writeTimeout(3, TimeUnit.MINUTES)
                             //.addInterceptor(new LoggingInterceptor())//添加请求拦截

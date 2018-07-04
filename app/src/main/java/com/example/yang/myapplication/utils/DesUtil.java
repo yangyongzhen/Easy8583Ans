@@ -1,4 +1,4 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.utils;
 
 import java.security.SecureRandom;
 
@@ -7,8 +7,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 
-import static com.example.yang.myapplication.MyUtil.bytesToHexString;
-import static com.example.yang.myapplication.MyUtil.hexStringToBytes;
+import static com.example.yang.myapplication.utils.MyUtil.bytesToHexString;
+import static com.example.yang.myapplication.utils.MyUtil.hexStringToBytes;
 import static java.lang.System.arraycopy;
 
 /**

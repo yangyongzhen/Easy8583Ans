@@ -1,12 +1,23 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 
 import retrofit2.Call;
@@ -17,8 +28,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import static java.lang.System.arraycopy;
 
-//import com.google.zxing.integration.android.IntentIntegrator;
-//import com.google.zxing.integration.android.IntentResult;
+import com.example.yang.myapplication.R;
+import com.example.yang.myapplication.ans8583.My8583Ans;
+import com.example.yang.myapplication.retrofit.ApiManager;
+import com.example.yang.myapplication.retrofit.DataBean;
+import com.example.yang.myapplication.retrofit.LoginResult;
+import com.example.yang.myapplication.retrofit.MyConverterFactory;
+import com.example.yang.myapplication.rxbus.Constant;
+import com.example.yang.myapplication.rxbus.EventMsg;
+import com.example.yang.myapplication.rxbus.RxBus;
+import com.example.yang.myapplication.utils.MyUtil;
+import com.example.yang.myapplication.utils.OkHttp3Utils;
 import com.karics.library.zxing.android.CaptureActivity;
 
 
@@ -26,8 +46,9 @@ public class MainActivity extends AppCompatActivity {
 
     public final String TAG = "MainActivity";
     private static final int REQUEST_CODE_SCAN = 0x0000;
-    View btn1,btn2,btn3,btn4;
-
+    View btn1,btn2,btn3,btn4,btn5,btn6;
+    EditText edt_log;
+    private Disposable disposable;
     //IntentIntegrator integrator;
     OkHttpClient client = OkHttp3Utils.getOkHttpSingletonInstance(MainActivity.this);
     String url = "https://140.207.168.62:30000/";
@@ -48,8 +69,40 @@ public class MainActivity extends AppCompatActivity {
         btn2 = findViewById(R.id.button2);
         btn3 = findViewById(R.id.button3);
         btn4 = findViewById(R.id.button4);
+        btn5 = findViewById(R.id.button5);
+        btn6 = findViewById(R.id.button6);
+
+        edt_log = (EditText) findViewById(R.id.editText);
+        edt_log.setInputType(InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        //文本显示的位置在EditText的最上方
+        edt_log.setGravity(Gravity.TOP);
+        edt_log.setSingleLine(false);
+        edt_log.setCursorVisible(false);
+        edt_log.setFocusable(false);
+        edt_log.setFocusableInTouchMode(false);
+        //水平滚动设置为False
+        edt_log.setHorizontallyScrolling(false);
+        edt_log.setVerticalScrollBarEnabled(true);
+        //edt_log.setMovementMethod(ScrollingMovementMethod.getInstance());
+
 
         My8583Ans.setMainKey("B9257F2A4C317675709EEF89D9D54A89");
+
+        disposable = RxBus.getInstance()
+                        .toObservable(
+                        EventMsg.class, Schedulers.io(),
+                        AndroidSchedulers.mainThread(),
+                        new Consumer<EventMsg>() {
+                            @Override
+                            public void accept(EventMsg eventMsg) throws Exception {
+                                //edt_log.setSelection(edt_log.getText().length(),edt_log.getText().length());
+                                if (Constant.OFF.equals(eventMsg.getTag())) {
+                                    edt_log.getText().append(eventMsg.getData() + "22");
+                                }else {
+                                    edt_log.getText().append(eventMsg.getData() + "11");
+                                }
+                            }
+                        });
 
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,6 +140,41 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.e("MainActivity", "显示扫一扫页面");
                 */
+
+            }
+        });
+        btn5.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("CheckResult")
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,"btn5 clicked", Toast.LENGTH_SHORT).show();
+                RxBus.getInstance().post(new EventMsg<String>(Constant.ON, "来自btn5的消息！"));
+                Observable.just("Hello")
+                        .subscribeOn(Schedulers.newThread())//指定：在新的线程中发起
+                        .observeOn(Schedulers.io())         //指定：在io线程中处理
+                        .map(new Function<String, String>() {
+                            @Override
+                            public String apply(String s) throws Exception {
+                                Thread.sleep(3000);
+                                return s+"延时3s";
+                            }
+                        })
+                        .observeOn(AndroidSchedulers.mainThread())//指定：在主线程中处理
+                        .subscribe(new Consumer<String>() {
+                            @Override
+                            public void accept(String inf) {
+                                //消费事件
+                                Toast.makeText(MainActivity.this, "结果:", Toast.LENGTH_LONG).show();
+                               // edt_log.setText(strlog.toString());
+                                Log.d("TAG",inf);
+                            }
+                        });
+            }
+        });
+        btn6.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,"btn6 clicked", Toast.LENGTH_SHORT).show();
 
             }
         });
@@ -166,6 +254,11 @@ public class MainActivity extends AppCompatActivity {
         byte[] send = new byte[myans.pack.txLen];
         arraycopy(myans.pack.txBuffer,0,send,0,myans.pack.txLen);
         String qdstr = My8583Ans.bytesToHexString(send);
+        final String[] strmsg = new String[1];
+        RxBus.getInstance().post(new EventMsg<String>(Constant.ON,  "->begin send:\n"));
+        RxBus.getInstance().post(new EventMsg<String>(Constant.ON,  qdstr));
+        RxBus.getInstance().post(new EventMsg<String>(Constant.ON, "\n签到报文解析:\n"));
+        RxBus.getInstance().post(new EventMsg<String>(Constant.ON, myans.getFields(myans.fieldsSend)));
         DataBean data = new DataBean(qdstr);
         Call<byte[]> call = apiService.postData(data.bodyhex);
         call.enqueue(new Callback<byte[]>() {
@@ -177,14 +270,18 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("AA",response.raw().toString());
                     String strrecv = MyUtil.bytesToHexString(response.body());
                     Log.d("respondAA:",strrecv);
+                    strmsg[0] = "接收响应成功!\n"+strrecv+"\n"+"开始解析:\n"+myans.getFields(myans.fieldsRecv);
                     //解析
                     System.out.println("开始解析...");
                     byte[] recv = My8583Ans.hexStringToBytes(strrecv);
                     int ret = myans.ans8583QD(recv,recv.length);
                     if(ret == 0){
                         //打印出解析成功的各个域
-                        System.out.println("签到成功!");
-                        System.out.println(myans.getFields(myans.fieldsRecv));
+                        Log.d("respondAA OK:","签到成功!");
+                        strmsg[0]+="\n签到成功!\n";
+                        //System.out.println("签到成功!");
+                        //System.out.println(myans.getFields(myans.fieldsRecv));
+                        Log.d("respondAA OK:",myans.getFields(myans.fieldsRecv));
                     }
                         //byte[] arr = response.raw().toString();
                         //arr[0] = 0;
@@ -192,9 +289,11 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     //直接操作UI 返回的respone被直接解析成你指定的modle
                     Log.d("AA","失败");
+                    strmsg[0]+="\n失败!\n";
                     //response.body().show();
 
                 }
+                RxBus.getInstance().post(new EventMsg<String>(Constant.ON, strmsg[0]));
             }
 
             @Override
@@ -202,6 +301,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // do onFailure代码
                 Log.d("AA","失败", t);
+                strmsg[0]+="\n发送失败!\n";
+                RxBus.getInstance().post(new EventMsg<String>(Constant.ON, strmsg[0]));
             }
         });
     }
@@ -289,5 +390,13 @@ public class MainActivity extends AppCompatActivity {
         else {
             super.onActivityResult(requestCode, resultCode, data);
         }*/
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (RxBus.getInstance().isObserver()) {
+            RxBus.getInstance().unregister(disposable);
+        }
     }
 }

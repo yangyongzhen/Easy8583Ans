@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
+    tools:context=".activity.MainActivity"
     android:orientation="vertical"
     >
 
@@ -30,14 +30,26 @@
         android:id="@+id/button4"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="扫一扫"
+        android:text="test4"
         />
+    <Button
+        android:id="@+id/button5"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="test5"
+        />
+    <Button
+        android:id="@+id/button6"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="test6"
+        />
+
     <EditText
         android:id="@+id/editText"
         android:layout_width="match_parent"
-        android:layout_height="190dp"
+        android:layout_height="228dp"
         android:ems="10"
-        android:inputType="textPersonName"
-        android:text="Log" />
+        android:scrollbars="vertical" />
 
 </LinearLayout>

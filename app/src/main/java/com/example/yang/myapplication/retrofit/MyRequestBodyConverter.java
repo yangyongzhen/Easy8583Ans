@@ -1,4 +1,4 @@
-package com.example.yang.myapplication;
+package com.example.yang.myapplication.retrofit;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
