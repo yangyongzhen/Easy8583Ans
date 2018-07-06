@@ -1,48 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<data>
+    <variable
+        name="myClick"
+        type="com.example.yang.myapplication.viewmodel.MainViewModel"/>
+    <variable
+        name="mainBean"
+        type="com.example.yang.myapplication.bean.mvvm.MainBean">
+    </variable>
+</data>
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.MainActivity"
     android:orientation="vertical"
     >
-
     <Button
         android:id="@+id/button1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Test1"
+        android:onClick="@{myClick.mainOnClick}"
          />
-
     <Button
         android:id="@+id/button2"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Test2"
+        android:onClick="@{myClick.mainOnClick}"
          />
     <Button
         android:id="@+id/button3"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="Test3"
+        android:onClick="@{myClick.mainOnClick}"
         />
     <Button
         android:id="@+id/button4"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="test4"
+        android:onClick="@{myClick.mainOnClick}"
         />
     <Button
         android:id="@+id/button5"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="test5"
+        android:onClick="@{myClick.mainOnClick}"
         />
     <Button
         android:id="@+id/button6"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="test6"
+        android:onClick="@{myClick.mainOnClick}"
         />
 
     <EditText
@@ -50,6 +62,8 @@
         android:layout_width="match_parent"
         android:layout_height="228dp"
         android:ems="10"
+        android:text="@{mainBean.log_txt}"
         android:scrollbars="vertical" />
 
 </LinearLayout>
+</layout>

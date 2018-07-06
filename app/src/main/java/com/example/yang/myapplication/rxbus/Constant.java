@@ -8,6 +8,8 @@ package com.example.yang.myapplication.rxbus;
  */
 public class Constant {
 
+  public static final String LOG = "log";
+
   public static final String ON = "on";
 
   public static final String OFF = "off";

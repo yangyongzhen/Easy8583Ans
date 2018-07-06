@@ -1,23 +1,13 @@
 package com.example.yang.myapplication.retrofit;
-
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
-import retrofit2.http.Query;
 
 public interface ApiManager {
 
-    @GET("/ajax.php?a=fy&f=auto&t=auto&w=hello%20world")
-    Call<LoginResult> getCall();
-
-    @GET("login/")
-    Call<LoginResult> getData(@Query("name") String name, @Query("password") String pw);
-
-    @Headers({"User-Agent: Donjin Http 0.1","Cache-Control: no-cache","Content-Type: x-ISO-TPDU/x-auth","Connection:close","Accept-Encoding: *"})//需要添加头
-   // @Multipart
+    @Headers({"User-Agent: Donjin Http 0.1","Cache-Control: no-cache","Content-Type: x-ISO-TPDU/x-auth","Accept-Encoding: *"})//需要添加头
     @POST("/")
     Call<byte[]> postData(@Body  RequestBody bodyhex);
 }

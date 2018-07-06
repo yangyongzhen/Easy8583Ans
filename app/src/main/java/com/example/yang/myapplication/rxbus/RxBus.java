@@ -13,9 +13,7 @@ import io.reactivex.schedulers.Schedulers;
 
 /**
  * PracticeRxBus
- *
- * @author 王文彬
- * @date 2017/12/25
+ * @author 
  */
 public class RxBus {
 
