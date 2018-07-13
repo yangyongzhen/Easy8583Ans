@@ -1,131 +1,93 @@
 package com.example.yang.myapplication.rxbus;
 
-import com.jakewharton.rxrelay2.BehaviorRelay;
-import com.jakewharton.rxrelay2.Relay;
+import android.annotation.SuppressLint;
+import android.util.ArrayMap;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 /**
- * PracticeRxBus
- * @author 
+ * RxBus
+ * @author CX
  */
 public class RxBus {
-
-  private Relay<Object> rxBus = null;
-
-  private static RxBus instance;
-
-  private static class IRxBusHolder {
-    private static final RxBus INSTANCE = new RxBus();
-  }
+  @SuppressLint("NewApi")
+  private ArrayMap<Object, List<Subject>> maps = new ArrayMap<Object, List<Subject>>();
+  private static volatile RxBus instance;
 
   private RxBus() {
-    rxBus = BehaviorRelay.create().toSerialized();
   }
 
-  public static final RxBus getInstance() {
-    return IRxBusHolder.INSTANCE;
+  public static RxBus get() {
+    if (instance == null) {
+      synchronized (RxBus.class) {
+        if (instance == null) {
+          instance = new RxBus();
+        }
+      }
+    }
+    return instance;
   }
 
-  public void post(Object event) {
-    rxBus.accept(event);
+  @SuppressLint("NewApi")
+  @SuppressWarnings("unchecked")
+  public <T> Observable<T> register(Object tag, Class<T> clazz) {
+    List<Subject> subjects = maps.get(tag);
+    if (subjects == null) {
+      subjects = new ArrayList<Subject>();
+      maps.put(tag, subjects);
+    }
+    Subject<T> subject = PublishSubject.<T> create();
+    subjects.add(subject);
+    return subject;
   }
 
-  private <T> Observable<T> register(Class<T> eventType) {
-    return rxBus.ofType(eventType);
-  }
-
-  public <T> Disposable toObservable(Class<T> eventType, Consumer<T> onNext) {
-    return register(eventType)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(onNext);
-  }
-
-  public <T> Disposable toObservable(
-      Class<T> eventType, Scheduler subScheduler, Scheduler obsScheduler, Consumer<T> onNext) {
-    return register(eventType).subscribeOn(subScheduler).observeOn(obsScheduler).subscribe(onNext);
-  }
-
-  public <T> Disposable toObservable(Class<T> eventType, Consumer<T> onNext, Consumer onError) {
-    return register(eventType)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(onNext, onError);
-  }
-
-  public <T> Disposable toObservable(
-      Class<T> eventType,
-      Scheduler subScheduler,
-      Scheduler obsScheduler,
-      Consumer<T> onNext,
-      Consumer onError) {
-    return register(eventType)
-        .subscribeOn(subScheduler)
-        .observeOn(obsScheduler)
-        .subscribe(onNext, onError);
-  }
-
-  public <T> Disposable toObservable(
-      Class<T> eventType, Consumer<T> onNext, Consumer onError, Action onComplete) {
-    return register(eventType)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(onNext, onError, onComplete);
-  }
-
-  public <T> Disposable toObservable(
-      Class<T> eventType,
-      Scheduler subScheduler,
-      Scheduler obsScheduler,
-      Consumer<T> onNext,
-      Consumer onError,
-      Action onComplete) {
-    return register(eventType)
-        .subscribeOn(subScheduler)
-        .observeOn(obsScheduler)
-        .subscribe(onNext, onError, onComplete);
-  }
-
-  public <T> Disposable toObservable(
-      Class<T> eventType,
-      Consumer<T> onNext,
-      Consumer onError,
-      Action onComplete,
-      Consumer onSubscribe) {
-    return register(eventType)
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(onNext, onError, onComplete, onSubscribe);
-  }
-
-  public <T> Disposable toObservable(
-      Class<T> eventType,
-      Scheduler subScheduler,
-      Scheduler obsScheduler,
-      Consumer<T> onNext,
-      Consumer onError,
-      Action onComplete,
-      Consumer onSubscribe) {
-    return register(eventType)
-        .subscribeOn(subScheduler)
-        .observeOn(obsScheduler)
-        .subscribe(onNext, onError, onComplete, onSubscribe);
-  }
-
-  public boolean isObserver() {
-    return rxBus.hasObservers();
-  }
-
-  public void unregister(Disposable disposable) {
-    if (disposable != null && !disposable.isDisposed()) {
-      disposable.dispose();
+  @SuppressLint("NewApi")
+  @SuppressWarnings("unchecked")
+  public void unregister(Object tag, Observable observable) {
+    List<Subject> subjects = maps.get(tag);
+    if (subjects != null) {
+      subjects.remove((Subject) observable);
+      if (subjects.isEmpty()) {
+        maps.remove(tag);
+      }
     }
   }
+
+  @SuppressWarnings("unchecked")
+  public void post(Object o) {
+    post(o.getClass().getSimpleName(), o);
+  }
+
+  @SuppressLint("NewApi")
+  @SuppressWarnings("unchecked")
+  public void post(Object tag, Object o) {
+    List<Subject> subjects = maps.get(tag);
+    if (subjects != null && !subjects.isEmpty()) {
+      Iterator<Subject> iterator = subjects.iterator();
+      while (iterator.hasNext()) {
+        Subject subject = iterator.next();
+        subject.onNext(o);
+      }
+      /*
+       * for (Subject s : subjects) { s.onNext(o); }
+       */
+    }
+  }
+
+  @SuppressLint("NewApi")
+  public void clearByTag(Object tag) {
+    if(maps.containsKey(tag)) {
+      List<Subject> subjects = maps.get(tag);
+      if (subjects != null) {
+        subjects.clear();
+      }
+    }
+  }
+
 }

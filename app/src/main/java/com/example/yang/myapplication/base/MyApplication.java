@@ -3,11 +3,13 @@ package com.example.yang.myapplication.base;
 import android.app.Application;
 import android.content.Context;
 
-public class MyAppcation extends Application {
+import org.litepal.LitePal;
 
-    private static MyAppcation instance;
+public class MyApplication extends Application {
+
+    private static MyApplication instance;
     public Context context;
-    public static MyAppcation getInstance(){
+    public static MyApplication getInstance(){
         return instance;
     }
 
@@ -15,6 +17,7 @@ public class MyAppcation extends Application {
         super.onCreate();
         instance = this;
         context = getApplicationContext();
+        LitePal.initialize(this);
     }
 
 }

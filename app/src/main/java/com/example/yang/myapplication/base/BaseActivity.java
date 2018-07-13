@@ -4,31 +4,19 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
-import android.widget.Toast;
-//import android.support.v4.util.ArrayMap;
+import android.support.v4.util.ArrayMap;
 
-import com.example.yang.myapplication.model.MainModel;
-import com.example.yang.myapplication.model.MainModelImpl;
-import com.example.yang.myapplication.rxbus.Constant;
-import com.example.yang.myapplication.rxbus.EventMsg;
 import com.example.yang.myapplication.rxbus.RxBus;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Observable;
 
 public abstract class BaseActivity extends FragmentActivity {
 
-    //private Disposable disposable;
-    //protected ArrayMap<Object, Disposable> disposables;
-    protected Disposable disposable;
     protected Context context;
-    protected MyAppcation sysApplication;
-    protected MainModel mainModel;
+    protected MyApplication myApplication;
+    protected ArrayMap<Object, Observable> observables;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,10 +24,9 @@ public abstract class BaseActivity extends FragmentActivity {
         if (getLayResId() > 0) {
             setContentView(getLayResId());
         }
-        //mainModel = new MainModelImpl();
         initView();
         registerRxbus();
-
+        myApplication = (MyApplication)getApplication();
     }
     /**
      * 获取layout资源文件id;
@@ -51,23 +38,15 @@ public abstract class BaseActivity extends FragmentActivity {
     protected void initView() {
     }
     protected void registerRxbus() {
-        //mainmodel.initRxbus(disposable);
-
-        disposable = RxBus.getInstance()
-                .toObservable(
-                        EventMsg.class, Schedulers.io(),
-                        AndroidSchedulers.mainThread(),
-                        new Consumer<EventMsg>() {
-                            @Override
-                            public void accept(EventMsg eventMsg) throws Exception {
-                                //edt_log.setSelection(edt_log.getText().length(),edt_log.getText().length());
-                                mainModel.doRxbus(eventMsg);
-                            }
-                        });
+        observables = new ArrayMap<>();
     }
     protected void unRegisterRxBus() {
-        if (RxBus.getInstance().isObserver()) {
-            RxBus.getInstance().unregister(disposable);
+        if (observables != null && observables.size() > 0) {
+            for (Map.Entry<Object, Observable> entity : observables.entrySet()) {
+                if (entity != null) {
+                    RxBus.get().unregister(entity.getKey(), entity.getValue());
+                }
+            }
         }
     }
     @Override

@@ -233,7 +233,7 @@ public class Easy8583Ans {
             }
         }
         pk.txLen = len;
-        pk.len[0] = (byte)((len-2) << 8);
+        pk.len[0] = (byte)(((len-2)&0xffff) >> 8);
         pk.len[1] = (byte)(len-2);
         arraycopy(pk.len,0,pk.txBuffer,0,2);
         arraycopy(pk.tpdu,0,pk.txBuffer,2,5);
@@ -342,9 +342,9 @@ public class Easy8583Ans {
 
     }
 
-    private static void dataXor1(byte[] in,int[] out, int len){
+    private static void dataXor1(byte[] in,byte[] out, int len){
         for(int i =0; i < len; i++){
-            out[i] |= (in[i]&0xff);
+            out[i] = (byte)((out[i]&0xff)^(in[i]&0xff));
         }
     }
 
@@ -365,7 +365,7 @@ public class Easy8583Ans {
 
         int x = datasize / 8; 		//计算有多少个完整的块
         int n = datasize % 8;
-       int[] val = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+        byte[] val = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
         byte[] block = new byte[1024];
         Arrays.fill(block, (byte) 0);//清零
         arraycopy(buf,seat,block,0,datasize);
@@ -379,8 +379,8 @@ public class Easy8583Ans {
             dataXor1(tmp,val,8);
             j += 8;
         }
-        String Bbuf = String.format("%02x%02x%02x%02x%02x%02x%02x%02x",val[0],val[1],
-                val[2],val[3],val[4],val[5],val[6],val[7]);
+        String Bbuf = String.format("%02x%02x%02x%02x%02x%02x%02x%02x",val[0]&0xff,val[1]&0xff,
+                val[2]&0xff,val[3]&0xff,val[4]&0xff,val[5]&0xff,val[6]&0xff,val[7]&0xff);
         byte[] bbuf =  Bbuf.getBytes();
         byte[] b1 = new byte[8];
         byte[] b2 = new byte[8];
@@ -388,13 +388,12 @@ public class Easy8583Ans {
         arraycopy(bbuf,8,b2,0,8);
         byte[] tmpmac;
         tmpmac = DES_encrypt(b1,mackey);
-
         byte[] Abuf = new byte[8];
         dataXor( tmpmac, b2, 8, Abuf );
         tmpmac = DES_encrypt(Abuf,mackey);
 
-        String str1 = String.format("%02x%02x%02x%02x%02x%02x%02x%02x",tmpmac[0],tmpmac[1],tmpmac[2]
-                ,tmpmac[3],tmpmac[4],tmpmac[5],tmpmac[6],tmpmac[7]);
+        String str1 = String.format("%02x%02x%02x%02x%02x%02x%02x%02x",tmpmac[0]&0xff,tmpmac[1]&0xff,tmpmac[2]&0xff
+                ,tmpmac[3]&0xff,tmpmac[4]&0xff,tmpmac[5]&0xff,tmpmac[6]&0xff,tmpmac[7]&0xff);
 
         byte[] mac = new byte[8];
         arraycopy(str1.getBytes(),0,mac,0,8);

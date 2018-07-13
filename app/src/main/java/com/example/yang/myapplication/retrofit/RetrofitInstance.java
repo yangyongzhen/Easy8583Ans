@@ -2,7 +2,7 @@ package com.example.yang.myapplication.retrofit;
 
 import android.util.Log;
 
-import com.example.yang.myapplication.base.MyAppcation;
+import com.example.yang.myapplication.base.MyApplication;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -79,7 +79,7 @@ public class RetrofitInstance {
             //加载公钥证书
             try {
                 //AssetManager assetManager =  AssetManager.class.newInstance();
-                InputStream is = MyAppcation.getInstance().getAssets().open("UP.pem");
+                InputStream is = MyApplication.getInstance().getAssets().open("UP.pem");
                 setCertificates(httpBuilder,is);
             } catch (IOException e) {
                 e.printStackTrace();
